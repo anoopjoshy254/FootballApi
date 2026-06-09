@@ -16,27 +16,23 @@ pipeline {
         
         stage('Build Docker Image') {
             steps {
-                script {
-                    dockerImage = docker.build("${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}", "-f Dockerfile .")
-                }
+                bat "docker build -t ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile ."
             }
         }
         
         stage('Push Docker Image') {
             steps {
-                script {
-                    docker.withRegistry("https://${REGISTRY}", 'docker-credentials-id') {
-                        dockerImage.push()
-                        dockerImage.push('latest')
-                    }
+                withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
+                    bat "echo %DOCKER_PASS% | docker login ${REGISTRY} -u %DOCKER_USER% --password-stdin"
+                    bat "docker push ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}"
+                    bat "docker tag ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} ${REGISTRY}/${DOCKER_IMAGE}:latest"
+                    bat "docker push ${REGISTRY}/${DOCKER_IMAGE}:latest"
                 }
             }
         }
         
         stage('Deploy') {
             steps {
-                // In a real scenario, you might ssh into the server and run docker-compose pull && docker-compose up -d
-                // Or use kubectl if deploying to Kubernetes.
                 echo "Deploying ${DOCKER_IMAGE}:${DOCKER_TAG}..."
             }
         }
