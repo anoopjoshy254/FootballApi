@@ -36,7 +36,7 @@ pipeline {
                     bat "docker start ${DB_CONTAINER} 2>nul || docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=WorldCupPollDb mysql:8.0"
                     
                     // Give MySQL 15 seconds to initialize before the API tries to run auto-migrations
-                    bat "timeout /t 15 /nobreak"
+                    sleep time: 15, unit: 'SECONDS'
                    
                     // Stop and remove existing container if running
                     bat "docker stop ${CONTAINER_NAME} 2>nul || ver >nul"
