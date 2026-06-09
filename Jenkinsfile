@@ -1,46 +1,67 @@
 pipeline {
     agent any
-
+ 
     environment {
-        DOCKER_IMAGE = 'football-api'
-        DOCKER_TAG = "v${env.BUILD_NUMBER}"
-        REGISTRY = 'your-docker-registry.com'
+        CONTAINER_NAME = 'football-web-api'
+        IMAGE_NAME = 'football-backend'
+        NETWORK_NAME = 'football-network'
+        DB_CONTAINER = 'football-mysql-db'
+        PORT_MAPPING = '5162:8080'
+        DB_CONNECTION = "Server=football-mysql-db;Port=3306;Database=WorldCupPollDb;User=root;Password=root;"
+        JWT_SECRET = 'SuperSecretKeyForFootballAppAuthJWTToken2026'
+        JWT_ISSUER = 'FootballApi'
+        JWT_AUDIENCE = 'FootballUi'
     }
-
+ 
     stages {
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
-        
+ 
         stage('Build Docker Image') {
             steps {
-                bat "docker build -t ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} -f Dockerfile ."
+                bat "docker build --no-cache -t ${IMAGE_NAME}:latest -t ${IMAGE_NAME}:${BUILD_NUMBER} ."
             }
         }
-        
-        stage('Push Docker Image') {
+ 
+        stage('Deploy Container') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-credentials-id', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
-                    bat "echo %DOCKER_PASS% | docker login ${REGISTRY} -u %DOCKER_USER% --password-stdin"
-                    bat "docker push ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    bat "docker tag ${REGISTRY}/${DOCKER_IMAGE}:${DOCKER_TAG} ${REGISTRY}/${DOCKER_IMAGE}:latest"
-                    bat "docker push ${REGISTRY}/${DOCKER_IMAGE}:latest"
+                script {
+                    // Ensure Docker network exists (ignoring error if it already exists)
+                    bat "docker network create ${NETWORK_NAME} 2>nul || ver >nul"
+                    
+                    // Optionally start the MySQL database if not already running
+                    // bat "docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=WorldCupPollDb -p 3306:3306 mysql:8.0 2>nul || ver >nul"
+                   
+                    // Stop and remove existing container if running
+                    bat "docker stop ${CONTAINER_NAME} 2>nul || ver >nul"
+                    bat "docker rm ${CONTAINER_NAME} 2>nul || ver >nul"
+                   
+                    // Launch new container using Windows Batch line continuation
+                    bat """
+                        docker run -d ^
+                            --name ${CONTAINER_NAME} ^
+                            --network ${NETWORK_NAME} ^
+                            -p ${PORT_MAPPING} ^
+                            -e ConnectionStrings__DefaultConnection="${DB_CONNECTION}" ^
+                            -e Jwt__Key="${JWT_SECRET}" ^
+                            -e Jwt__Issuer="${JWT_ISSUER}" ^
+                            -e Jwt__Audience="${JWT_AUDIENCE}" ^
+                            ${IMAGE_NAME}:latest
+                    """
                 }
             }
         }
-        
-        stage('Deploy') {
-            steps {
-                echo "Deploying ${DOCKER_IMAGE}:${DOCKER_TAG}..."
-            }
-        }
     }
-    
+ 
     post {
-        always {
-            cleanWs()
+        success {
+            echo "Backend pipeline completed successfully!"
+        }
+        failure {
+            echo "Backend pipeline failed. Please check the logs."
         }
     }
 }
