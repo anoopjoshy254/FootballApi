@@ -32,8 +32,11 @@ pipeline {
                     // Ensure Docker network exists (ignoring error if it already exists)
                     bat "docker network create ${NETWORK_NAME} 2>nul || ver >nul"
                     
-                    // Optionally start the MySQL database if not already running
-                    // bat "docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=WorldCupPollDb -p 3306:3306 mysql:8.0 2>nul || ver >nul"
+                    // Start the MySQL database if not already running
+                    bat "docker start ${DB_CONTAINER} 2>nul || docker run -d --name ${DB_CONTAINER} --network ${NETWORK_NAME} -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=WorldCupPollDb -p 3306:3306 mysql:8.0"
+                    
+                    // Give MySQL 15 seconds to initialize before the API tries to run auto-migrations
+                    bat "timeout /t 15 /nobreak"
                    
                     // Stop and remove existing container if running
                     bat "docker stop ${CONTAINER_NAME} 2>nul || ver >nul"
