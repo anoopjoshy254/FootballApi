@@ -10,7 +10,7 @@ pipeline {
 
         AKS     = 'football-aks'
 
-        IMAGE   = 'product-api'
+        IMAGE   = 'football-api'
 
         AZ_CLIENT_ID     = credentials('azure-client-id')
 
@@ -74,9 +74,9 @@ pipeline {
 
                 bat 'kubectl apply -f %TEMP%\\02-api.yaml'
 
-                bat 'kubectl set image deployment/product-api product-api=%ACR%.azurecr.io/%IMAGE%:%BUILD_NUMBER%'
+                bat 'kubectl set image deployment/football-api football-api=%ACR%.azurecr.io/%IMAGE%:%BUILD_NUMBER%'
 
-                bat 'kubectl rollout status deployment/product-api --timeout=120s'
+                bat 'kubectl rollout status deployment/football-api --timeout=120s'
 
             }
 
@@ -86,9 +86,9 @@ pipeline {
 
     post {
 
-        success { echo "product-api ${BUILD_NUMBER} deployed to AKS." }
+        success { echo "football-api ${BUILD_NUMBER} deployed to AKS." }
 
-        failure { echo 'product-api pipeline failed.' }
+        failure { echo 'football-api pipeline failed.' }
 
         always  { bat 'az logout || exit 0' }
 
