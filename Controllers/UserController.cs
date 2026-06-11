@@ -3,6 +3,8 @@ using FootballApi.DTOs;
 using FootballApi.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using FootballApi.Hubs;
 
 namespace FootballApi.Controllers;
 
@@ -11,10 +13,12 @@ namespace FootballApi.Controllers;
 public class UserController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IHubContext<PollHub> _hubContext;
 
-    public UserController(IUserService userService)
+    public UserController(IUserService userService, IHubContext<PollHub> hubContext)
     {
         _userService = userService;
+        _hubContext = hubContext;
     }
 
     [HttpGet("teams")]
@@ -38,6 +42,7 @@ public class UserController : ControllerBase
         try
         {
             await _userService.SubmitPollAsync(userId, request);
+            await _hubContext.Clients.All.SendAsync("ReceivePollUpdate");
             return Ok(new { Message = "Vote submitted successfully." });
         }
         catch (InvalidOperationException ex)

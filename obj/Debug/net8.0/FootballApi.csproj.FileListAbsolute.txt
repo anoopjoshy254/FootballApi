@@ -118,3 +118,4 @@ C:\Users\Anoop.K\Downloads\dotnet\Football\FootballApi\obj\Debug\net8.0\refint\F
 C:\Users\Anoop.K\Downloads\dotnet\Football\FootballApi\obj\Debug\net8.0\FootballApi.pdb
 C:\Users\Anoop.K\Downloads\dotnet\Football\FootballApi\obj\Debug\net8.0\FootballApi.genruntimeconfig.cache
 C:\Users\Anoop.K\Downloads\dotnet\Football\FootballApi\obj\Debug\net8.0\ref\FootballApi.dll
+C:\Users\Anoop.K\Downloads\dotnet\Football\FootballApi\obj\Debug\net8.0\FootballApi.sourcelink.json
