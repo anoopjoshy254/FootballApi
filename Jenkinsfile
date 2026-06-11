@@ -44,7 +44,7 @@ pipeline {
 
                 bat 'az login --service-principal -u %AZ_CLIENT_ID% -p %AZ_CLIENT_SECRET% --tenant %AZ_TENANT_ID%'
 
-                bat 'az acr login -n %ACR%'
+                bat 'docker login %ACR%.azurecr.io -u %AZ_CLIENT_ID% -p %AZ_CLIENT_SECRET%'
 
             }
 
